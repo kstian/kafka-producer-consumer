@@ -1,0 +1,3 @@
+spring:
+  kafka:
+    bootstrap-servers: 192.168.56.100:9092

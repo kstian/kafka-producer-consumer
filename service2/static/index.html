@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width,initial-scale=1,minimal-ui" name="viewport">
+    <title>Member</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@2.7.3/dist/quasar.prod.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <main id="v-app">
+        <div class="q-pa-md">
+            <q-table title="Member Events" :rows="member" :columns="columns" row-key="id">
+
+                <template v-slot:body="props">
+                <q-tr :props="props">
+                  <q-td key="id" :props="props">
+                    {{ props.row.id }}
+                  </q-td>
+                  <q-td key="firstName" :props="props">
+                    {{ props.row.firstName }}
+                  </q-td>
+                  <q-td key="lastName" :props="props">
+                    {{ props.row.lastName }}
+                  </q-td>
+                </q-tr>
+              </template>
+            </q-table>
+        </div>
+    </main>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.7.3/dist/quasar.umd.prod.js"></script>
+    <script>
+        const {
+            createApp,
+            onMounted,
+            ref
+        } = Vue
+        const app = createApp({
+            setup() {
+                const columns = [{
+                    name: "id",
+                    required: true,
+                    label: "ID",
+                    align: "left",
+                    field: (row) => row.id,
+                    sortable: true,
+                }, {
+                    name: "firstName",
+                    required: true,
+                    label: "First Name",
+                    align: "left",
+                    field: (row) => row.firstName,
+                    sortable: true,
+                }, {
+                    name: "lastName",
+                    required: true,
+                    label: "Last Name",
+                    align: "left",
+                    field: (row) => row.lastName,
+                    sortable: true,
+                }, ];
+                const member = ref([])
+
+                receiveMessage = (m) => {
+                    const i = member.value.findIndex(member => m.id === member.id)
+                    if (i == -1) {
+                        member.value.push(m);
+                    } else {
+                        member.value[i] = m;
+                    }
+
+                }
+                onMounted(() => {
+                    const socket = io('/');
+                    socket.on('member', (msg) => {
+                        console.log(msg)
+                        receiveMessage(JSON.parse(msg));
+                    });
+                })
+                return {
+                    columns,
+                    member
+                }
+            }
+        });
+        app.use(Quasar)
+        app.mount('#v-app')
+    </script>
+</body>
+
+</html>

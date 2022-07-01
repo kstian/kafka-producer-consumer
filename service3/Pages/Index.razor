@@ -1,0 +1,46 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Data
+@using System.ComponentModel
+@using AntDesign.TableModels
+@inject NavigationManager NavigationManager
+@implements IAsyncDisposable
+
+<Table TItem="Member" DataSource="@messages">
+    <Column @bind-Field="@context.Id" Sortable />
+    <Column @bind-Field="@context.FirstName" Sortable />
+    <Column @bind-Field="@context.LastName" Sortable />
+</Table>
+
+@code {
+    private HubConnection? hubConnection;
+    private List<Member> messages = new List<Member>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/member"))
+            .Build();
+
+        hubConnection.On<Member>("ReceiveMessage", (member) =>
+        {
+            int index = messages.FindIndex(m => m.Id == member.Id);
+            if (index != -1) {
+                messages[index] =  member;
+            } else {
+                messages.Add(member);
+            }
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
